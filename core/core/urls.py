@@ -49,7 +49,4 @@ urlpatterns = [
     path('auth/', include('my_auth.urls')),
     # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1.0/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    
-   
 ]

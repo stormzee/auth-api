@@ -67,3 +67,21 @@ class PasswordSerializer(serializers.ModelSerializer):
                 'write_only':True
             }
         }
+
+class PasswordResetSerializer(serializers.ModelSerializer):
+    password1 = serializers.CharField(required=True)
+    password2 = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['password1', 'password2']
+        extra_kwargs = {
+            'password1':{
+                'write_only':True
+            },
+
+            'password2':{
+                'write_only':True
+            }
+        }
+    

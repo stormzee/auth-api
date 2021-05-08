@@ -1,13 +1,21 @@
 from django.shortcuts import render
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, update_session_auth_hash
 from rest_framework import status,exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserSerializer, CreateUserSerializer, LoginSerializer, PasswordSerializer
+from .serializers import (UserSerializer, CreateUserSerializer, 
+        LoginSerializer, PasswordSerializer, 
+        PasswordResetSerializer
+        )
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from rest_framework.generics import GenericAPIView
+from b64uuid import B64UUID
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 class User_create_view(GenericAPIView):
     permission_classes = [AllowAny]
@@ -84,6 +92,8 @@ class PasswordChangeView(GenericAPIView):
         if new_pass != old_pass:
             user.set_password(new_pass)
             user.save()
+            # make sure the user is not logged out after changing the password.
+            update_session_auth_hash(request, user)
         else:
             raise PermissionDenied('Old password is same as New password')
 
@@ -92,3 +102,26 @@ class PasswordChangeView(GenericAPIView):
         }
 
         return Response(response, 200)
+
+class PasswordResetView(GenericAPIView):
+    Serializer_class = PasswordResetSerializer
+    peremission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        user = request.user
+        email = user.email
+        # generate a token to be sent via email
+        token = str(RefreshToken.for_user(user).access_token)
+        uid = str(B64UUID(user.id))
+        domain = str(get_current_site(request).domain)
+        abs_url = f'http//+{domain}+?uid={uid}+?token={token}'
+        msg_body = f'Hello {user.username}, please reset your password by clicking on the link below\n{abs_url}'
+        subject = f'{domain} Password Reset Link'
+        send_mail(
+            subject=subject,
+            message = msg_body,
+            From = settings.EMAIL_HOST_USER,
+            To = email
+        )
+
+        return Response()
