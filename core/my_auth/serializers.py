@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from .models import User
 
-
-
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -52,7 +50,7 @@ class LoginSerializer(serializers.ModelSerializer):
         }
 
 
-class PasswordSerializer(serializers.ModelSerializer):
+class PasswordChangeSerializer(serializers.ModelSerializer):
     new_password = serializers.CharField(required=True)
     old_password = serializers.CharField(required=True)
 
@@ -68,20 +66,25 @@ class PasswordSerializer(serializers.ModelSerializer):
             }
         }
 
-class PasswordResetSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(required=True)
-    password2 = serializers.CharField(required=True)
+class PasswordResetEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=200, required=True)
 
     class Meta:
-        model = User
-        fields = ['password1', 'password2']
-        extra_kwargs = {
-            'password1':{
-                'write_only':True
-            },
+        fields = ['email']
 
-            'password2':{
+# Get the user by email
+# encode user's id in uidb64 format
+# encode the token and send them(id,token) as part of the email
+            
+class ResetPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(required=True)
+
+    class Meta:
+        fields = ['new_password']
+        extra_kwargs = {
+            'new_password':{
                 'write_only':True
             }
         }
+
     

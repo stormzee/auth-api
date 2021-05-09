@@ -17,6 +17,7 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# BASE_URL = 'http//127.'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -55,9 +56,9 @@ MIDDLEWARE = [
     
 ]
 
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PORT = ''
-EMAIL_HOST = ''
+EMAIL_HOST_USER = 'soppongaddo@gmail.com'
+EMAIL_HOST_PORT = 587
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_PASSWORD = 'redeemer1998'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
