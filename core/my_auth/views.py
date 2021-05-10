@@ -143,8 +143,11 @@ class PasswordResetEmailView(GenericAPIView):
         serializer = self.serializer_class(data=request.data, context={'request':request})
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
-        if User.objects.filter(email=email).exists():
-                user = User.objects.get(email = email)
+
+        user = User.objects.get(email= email)
+    
+        print(user.username)
+        # user = User.objects.get(email = email)
         uid = urlsafe_base64_encode(force_bytes(user.id))
         token = PasswordResetTokenGenerator().make_token(user)
         reset_url_args ={
@@ -162,13 +165,14 @@ class PasswordResetEmailView(GenericAPIView):
             'From':  settings.EMAIL_HOST_USER,
             'To' : user.email
         }
-# To do, use a celery task to handle the sending of email
+    # To do, use a celery task to handle the sending of email
 
-        utils_func.send_email(data)
+        utils_func.send_email(self,data)
         return Response({
             'success':' A link has been sent to this email, use that to reset your password',
-            
+        
         },status=status.HTTP_200_OK)
+
 
 
 class PasswordResetConfirmView(GenericAPIView):
@@ -181,13 +185,13 @@ class PasswordResetConfirmView(GenericAPIView):
 
 
 
-class ResetPasswordView(GenericAPIView):
-    serializer_class = ResetPasswordSerializer
-    permission_classes = [AllowAny]
+# class ResetPasswordView(GenericAPIView):
+#     serializer_class = ResetPasswordSerializer
+#     permission_classes = [AllowAny]
 
-    def post(self, request, format=None):
-        serializer = self.serializer_class(data=request.data, context={'request':request})
-        serializer.is_valid(raise_exception=True)
+#     def post(self, request, format=None):
+#         serializer = self.serializer_class(data=request.data, context={'request':request})
+#         serializer.is_valid(raise_exception=True)
 
         
 
