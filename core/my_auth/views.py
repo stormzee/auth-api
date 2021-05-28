@@ -1,5 +1,7 @@
+from django.contrib.auth.models import Permission
+from django.core.checks import messages
 from django.shortcuts import render
-from django.contrib.auth import authenticate, update_session_auth_hash
+from django.contrib.auth import authenticate, get_user, update_session_auth_hash
 from rest_framework import status,exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -18,9 +20,9 @@ from . import utils
 from rest_framework import status
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import (
-    smart_str, smart_bytes, force_str, force_bytes
+    DjangoUnicodeDecodeError, force_text, smart_str, smart_bytes, force_str, force_bytes
 )
-from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.urls import reverse
 # from django.conf import settings
 from .utils import utils_func
@@ -105,7 +107,7 @@ class PasswordChangeView(GenericAPIView):
             # make sure the user is not logged out after changing the password.
             update_session_auth_hash(request, user)
         else:
-            raise PermissionDenied('Old password is same as New password')
+            raise exceptions.PermissionDenied('Old password is same as New password')
 
         response = {
             'status':'Success',
@@ -143,19 +145,17 @@ class PasswordResetEmailView(GenericAPIView):
         serializer = self.serializer_class(data=request.data, context={'request':request})
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
-
         user = User.objects.get(email= email)
     
-        print(user.username)
         # user = User.objects.get(email = email)
         uid = urlsafe_base64_encode(force_bytes(user.id))
         token = PasswordResetTokenGenerator().make_token(user)
         reset_url_args ={
             'uidb64':uid, 'token':token,
         }
-        reset_path = reverse('password-reset-confirm', kwargs=reset_url_args)
+        reset_path = reverse('verify-user-token', kwargs=reset_url_args)
         domain = str(get_current_site(request).domain)
-        reset_url = f'http//{domain}{reset_path}'
+        reset_url = f'http://{domain}{reset_path}'
         msg_body = f'Hello {user.username}, please reset your password by clicking on the link below {reset_url}'
         subject = f'{domain} Password Reset Link'
 
@@ -175,25 +175,42 @@ class PasswordResetEmailView(GenericAPIView):
 
 
 
-class PasswordResetConfirmView(GenericAPIView):
-    # serializer_class = ResetPasswordSerializer
+class GetUserTokenView(GenericAPIView):
 
-    def get(self, uidb64, token):
-        user_id = decode(uidb64)
-        user = User.objects.get(pk=user_id)
+    def get(self, request, uidb64, token):
+        try:
+            user_id = smart_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=user_id)
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                return Response({
+                    'message': 'Invalid credentials',
+                })
+                
+            return Response(
+                {
+                    'Success':True,
+                    'message':'Valid credentials',
+                    'uidb64':uidb64,
+                    'token': token,
+                }, status=status.HTTP_200_OK
+            )
+        except DjangoUnicodeDecodeError as error:
+            return Response({
+                'Success': False,
+                'message': 'Not able to decode user id',
+            }, status=status.HTTP_404_BAD_REQUEST
+            )
 
 
+class ResetPassword(GenericAPIView):
+    serializer_class = ResetPasswordSerializer
+    Permission_classes = ['AllowAny']
 
 
-# class ResetPasswordView(GenericAPIView):
-#     serializer_class = ResetPasswordSerializer
-#     permission_classes = [AllowAny]
-
-#     def post(self, request, format=None):
-#         serializer = self.serializer_class(data=request.data, context={'request':request})
-#         serializer.is_valid(raise_exception=True)
-
-        
-
-    
-
+    def patch(self, request, format=None):
+        serializer = self.serializer_class(data=request.data, context={'request':request})
+        serializer.is_valid(raise_exception=True)
+        return Response({
+            'success': True,
+            'message': 'Password reset successful',
+        }, status=status.HTTP_200_OK)

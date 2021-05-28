@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from .views import PasswordResetConfirmView,User_create_view,CreateUserView,UserLoginView,PasswordChangeView,PasswordResetEmailView
+from .views import GetUserTokenView,User_create_view,CreateUserView,UserLoginView,PasswordChangeView,PasswordResetEmailView,ResetPassword
 from rest_framework.schemas import get_schema_view
 
 urlpatterns = [
@@ -10,7 +10,8 @@ urlpatterns = [
     path('login/', UserLoginView.as_view(), name='login'),
     path('password/', PasswordChangeView.as_view(),name='change-password'),
     path('password-reset-email/',PasswordResetEmailView.as_view(), name='password-reset-email'),
-    path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('verify-user-token/<uidb64>/<token>/', GetUserTokenView.as_view(), name='verify-user-token'),
+    path('reset-password/', ResetPassword.as_view(), name='reset-password'),
     
     # ...
     # Use the `get_schema_view()` helper to add a `SchemaView` to project URLs.
