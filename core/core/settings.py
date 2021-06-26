@@ -81,11 +81,11 @@ CORS_ALLOW_HEADERS = [
 ]
 
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'localedev101@gmail.com'
+EMAIL_HOST_USER = '' #email here
 EMAIL_PORT = 587
 # EMAIL_HOST_PORT = '587'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_PASSWORD = 'localedev101localedev101'
+EMAIL_HOST_PASSWORD = '' #password here
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 
